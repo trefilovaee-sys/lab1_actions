@@ -49,8 +49,6 @@ jobs:
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '2024.09.30'
 
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
