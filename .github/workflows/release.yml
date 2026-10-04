@@ -52,6 +52,11 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
           C:\vcpkg\bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Install Boost.Test via vcpkg
+        run: C:\vcpkg\vcpkg.exe install boost-test:x64-windows
+        shell: pwsh
 
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
