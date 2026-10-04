@@ -47,13 +47,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
+      - name: Find Boost
+        id: find_boost
+        shell: pwsh
+        run: |
+          $boost = Get-ChildItem C:\local\ -Directory -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Name -like "boost_*" } |
+                   Select-Object -First 1
+          if ($boost) {
+            echo "BOOST_ROOT=$($boost.FullName)" >> $env:GITHUB_ENV
+            Write-Host "Found Boost at $($boost.FullName)"
+          } else {
+            Write-Host "Boost NOT found in C:\local\"
+            Get-ChildItem C:\local\ -ErrorAction SilentlyContinue
+            exit 1
+          }
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-             -DPATCH_VERSION=${{ github.run_number }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DPATCH_VERSION=${{ github.run_number }}
 
       - name: Build
         run: cmake --build build --config Release

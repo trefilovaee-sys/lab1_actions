@@ -9,10 +9,7 @@ set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
 project(helloworld VERSION ${PROJECT_VESRION})
 
-if(WIN32 AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-    set(Boost_NO_BOOST_CMAKE ON)
-endif()
-
+set(Boost_NO_BOOST_CMAKE ON)
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
