@@ -1,0 +1,98 @@
+name: 'C++ CI'
+
+on:
+  push:
+    branches:
+      - main
+      - feature/github_actions
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Boost
+        run: sudo apt-get update && sudo apt-get install -y libboost-test-dev
+
+      - name: Configure
+        run: cmake -B build -DPATCH_VERSION=${{ github.run_number }}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: cd build && ctest --output-on-failure
+
+      - name: Package
+        run: cmake --build build --target package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helloworld-linux
+          path: build/*.deb
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Configure
+        run: cmake -B build -DPATCH_VERSION=${{ github.run_number }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Test
+        run: cd build && ctest -C Release --output-on-failure
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helloworld-windows
+          path: build/Release/helloworld_cli.exe
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: helloworld-linux
+          path: artifacts/
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: helloworld-windows
+          path: artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.0.${{ github.run_number }}
+          name: Release 0.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/*.deb
+            artifacts/*.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
