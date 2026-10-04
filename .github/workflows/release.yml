@@ -46,11 +46,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
         with:
-          submodules: true
+          vcpkgGitCommitId: '2024.09.30'
 
       - name: Configure
-        run: cmake -B build -DPATCH_VERSION=${{ github.run_number }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+             -DPATCH_VERSION=${{ github.run_number }}
 
       - name: Build
         run: cmake --build build --config Release
